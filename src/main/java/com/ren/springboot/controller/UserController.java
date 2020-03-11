@@ -20,7 +20,7 @@ public class UserController {
 
     @PostMapping("/userLogin")
     @ApiOperation(value = "用户登录")
-    public Result userLogin(@RequestBody User user) {
+    public Result userLogin(@RequestBody  User user) {
         Boolean result = userService.userLogin(user);
         if (result == true) {
             String token = JWTUtil.generateToken(user.getUserName(), user.getPassword());
