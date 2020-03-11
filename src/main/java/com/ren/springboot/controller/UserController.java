@@ -24,6 +24,7 @@ public class UserController {
         Boolean result = userService.userLogin(user);
         if (result == true) {
             String token = JWTUtil.generateToken(user.getUserName(), user.getPassword());
+            System.out.println(token);
             return new Result(CommonStatus.SUCCESS, token);
         }
         return new Result(CommonStatus.PASSWORD_ERROR);
