@@ -5,66 +5,106 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.ren.springboot.exception.UnauthorizedException;
+import com.ren.springboot.common.AuthConstant;
 
+import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Date;
 
 public class JWTUtil {
 
     // 过期时间5分钟
-    private static final long EXPIRE_TIME = 5 * 60 * 1000;
+    private static final long EXPIRE_TIME = 5*60*1000;
 
     /**
      * 校验token是否正确
-     *
-     * @param token  密钥
-     * @param secret 用户的密码
-     * @return 是否正确
+     * @param token
+     * @param username
+     * @param secret
+     * @return
      */
-    public static boolean verify(String token, String username, String secret) {
-        try {
+    public static boolean verifyToken(String token, String username, String secret){
+        // 根据密码生成JWT校验器
+        try{
             Algorithm algorithm = Algorithm.HMAC256(secret);
             JWTVerifier verifier = JWT.require(algorithm)
-                    .withClaim("username", username)
+                    .withClaim("username",username)
                     .build();
+            // 校验token，这里是jwt的内部实现，可能会抛出错误（token错误或过期等），同样将错误抛回给上层
             DecodedJWT jwt = verifier.verify(token);
             return true;
-        } catch (Exception exception) {
+        }catch (Exception e){
             return false;
         }
     }
 
     /**
-     * 获得token中的信息无需secret解密也能获得
-     *
-     * @return token中包含的用户名
+     * 获得token中的用户信息，无需解密
+     * @param token
+     * @return
      */
-    public static String getUsername(String token) {
-        try {
+    public static String getUsername(String token){
+        try{
             DecodedJWT jwt = JWT.decode(token);
             return jwt.getClaim("username").asString();
-        } catch (JWTDecodeException e) {
+        }catch (JWTDecodeException e){
             return null;
         }
     }
 
     /**
-     * 生成token,5min后过期
-     * @param username 用户名
-     * @param secret 用户的密码
-     * @return 加密的token
+     * 生成签名
+     * @return
      */
-    public static String generateToken(String username, String secret) {
-        try {
-            Date date = new Date(System.currentTimeMillis()+EXPIRE_TIME);
-            Algorithm algorithm = Algorithm.HMAC256(secret);
-            // 附带username信息
-            return JWT.create()
-                    .withClaim("username", username)
-                    .withExpiresAt(date)
-                    .sign(algorithm);
-        } catch (UnauthorizedException e) {
-            return null;
-        }
+    public static String sign(String userName, String password) {
+
+        Date date = new Date(System.currentTimeMillis()+EXPIRE_TIME);
+
+        String secret = password;
+        Algorithm algorithm = Algorithm.HMAC256(secret);
+        // 附带username信息和过期信息
+        return JWT.create()
+                .withClaim("username", userName)
+                .withExpiresAt(date)
+                .sign(algorithm);
+
+    }
+
+    /**
+     * 从请求头中获取token
+     * @param httpServletRequest
+     * @return
+     */
+    public static String getRequestToken(HttpServletRequest httpServletRequest){
+        String token = "";
+//        Cookie[] cookies = httpServletRequest.getCookies();
+//        if(cookies != null){
+//            for(Cookie ck : cookies){
+//                if(StringUtils.equals(AuthConstant.COOKIE_TOKEN_NAME, ck.getName())){
+//                    token = ck.getValue();
+//                    break;
+//                }
+//            }
+//        }
+        token = httpServletRequest.getHeader("token");
+        return token;
+    }
+
+    /**
+     * 编辑浏览器cookie
+     * @param response
+     * @param tokenValue
+     */
+    public static void editCookieToken(ServletResponse response, String tokenValue){
+        HttpServletResponse httpServletResponse = (HttpServletResponse)response;
+        Cookie cookie = new Cookie(AuthConstant.COOKIE_TOKEN_NAME, tokenValue);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);//前端不可读cookie
+        //跨域向前端写cookie
+        httpServletResponse.setHeader("Access-Control-Allow-Origin",
+                httpServletResponse.getHeader("Origin"));
+        httpServletResponse.addCookie(cookie);
     }
 }

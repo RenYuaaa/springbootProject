@@ -27,5 +27,8 @@ public class User {
     @ApiModelProperty(value = "昵称", name = "nickName")
     private String nickName;
 
+    @ApiModelProperty(value = "角色", name = "role")
+    private Role role;
+
 
 }
