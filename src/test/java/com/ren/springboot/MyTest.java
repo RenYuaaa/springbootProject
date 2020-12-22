@@ -9,6 +9,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.DigestUtils;
 import sun.misc.BASE64Encoder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -122,5 +123,15 @@ public class MyTest {
 //    public void redisTest() {
 //        redisTemplate.opsForValue().set("aaa", "111");
 //    }
+
+    @Test
+    public void test() {
+        List<Integer> list = new ArrayList<>();
+
+        list.add(1);
+        list.add(3);
+        list.add(2);
+        list.add(null);
+    }
 
 }

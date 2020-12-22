@@ -21,10 +21,12 @@ public enum  CommonStatus implements CommonStatusInterface{
         this.text = text;
     }
 
+    @Override
     public int getCode() {
         return code;
     }
 
+    @Override
     public String getText() {
         return text;
     }
